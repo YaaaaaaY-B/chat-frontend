@@ -1,22 +1,38 @@
-// Connect to the Socket.io server (replace this URL with your actual Heroku URL later)
-const socket = io('https://your-backend.herokuapp.com');  // Replace with your Heroku URL
+// Connect to the back-end server using Socket.io
+const socket = io('https://chat-backend-3wqd.onrender.com');  // Replace with your Render back-end URL
 
-const messageInput = document.getElementById('message-input');
-const sendBtn = document.getElementById('send-btn');
+// Get references to DOM elements
 const chatBox = document.getElementById('chat-box');
+const messageInput = document.getElementById('message-input');
+const sendButton = document.getElementById('send-btn');
 
-// Send message on button click
-sendBtn.addEventListener('click', () => {
-    const message = messageInput.value.trim();
-    if (message) {
-        socket.emit('message', message);
-        messageInput.value = '';
+// Function to append messages to the chat box
+function appendMessage(message, sender) {
+    const messageElement = document.createElement('div');
+    messageElement.textContent = message;
+    messageElement.classList.add(sender === 'user' ? 'user-message' : 'other-message');
+    chatBox.appendChild(messageElement);
+    chatBox.scrollTop = chatBox.scrollHeight;  // Auto scroll to the bottom
+}
+
+// Listen for incoming messages
+socket.on('message', (message) => {
+    appendMessage(message, 'other');  // Display the received message as from another user
+});
+
+// Send message when the button is clicked
+sendButton.addEventListener('click', () => {
+    const message = messageInput.value;
+    if (message.trim()) {
+        socket.emit('message', message);  // Send the message to the server
+        appendMessage(`You: ${message}`, 'user');  // Display the message on the sender's screen
+        messageInput.value = '';  // Clear the input field
     }
 });
 
-// Receive message and append it to the chat box
-socket.on('message', (msg) => {
-    const messageElement = document.createElement('div');
-    messageElement.textContent = msg;
-    chatBox.appendChild(messageElement);
+// Allow pressing "Enter" to send a message
+messageInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        sendButton.click();
+    }
 });
